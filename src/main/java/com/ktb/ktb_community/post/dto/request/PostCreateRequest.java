@@ -12,6 +12,4 @@ public class PostCreateRequest {
     String title;
 
     String content;
-
-    List<String> fileUrls;
 }

@@ -11,8 +11,5 @@ public record PostDetailResponse (
     String content,
     Long likeCount,
     Long viewCount,
-    LocalDateTime createdAt,
-
-    // 사진
-    List<FileInfo> postImages
+    LocalDateTime createdAt
 ){}

@@ -11,6 +11,4 @@ public class PostUpdateRequest {
     String title;
 
     String content;
-
-    List<String> fileUrls;
 }
