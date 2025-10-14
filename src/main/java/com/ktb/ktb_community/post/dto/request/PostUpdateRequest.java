@@ -5,10 +5,10 @@ import jakarta.validation.constraints.Size;
 
 import java.util.List;
 
-public class PostUpdateRequest {
+public record PostUpdateRequest (
 
     @Size(max = 255, message = "제목은 최대 255자입니다")
-    String title;
+    String title,
 
-    String content;
-}
+    String content
+){}
