@@ -52,28 +52,28 @@ public class PostController {
     }
 
     // Get - post 상세 조회
-    @GetMapping("/{postId}")
-    public ResponseEntity<?> getPost(@PathVariable Long postId) {
-
-    }
+//    @GetMapping("/{postId}")
+//    public ResponseEntity<?> getPost(@PathVariable Long postId) {
+//
+//    }
 
     // Post - post 작성
-    @PostMapping
-    public ResponseEntity<?> createPost(@RequestBody PostCreateRequest postCreateRequest) {
-
-    }
+//    @PostMapping
+//    public ResponseEntity<?> createPost(@RequestBody PostCreateRequest postCreateRequest) {
+//
+//    }
 
     // Patch - post 수정
-    @PatchMapping("/{postId}")
-    public ResponseEntity<?> updatePost(@PathVariable Long postId, @RequestBody PostUpdateRequest postUpdateRequest) {
-
-    }
+//    @PatchMapping("/{postId}")
+//    public ResponseEntity<?> updatePost(@PathVariable Long postId, @RequestBody PostUpdateRequest postUpdateRequest) {
+//
+//    }
 
     // Delete - post 삭제
-    @DeleteMapping("/{postId}")
-    public ResponseEntity<?> deletePost(@PathVariable Long postId) {
-
-    }
+//    @DeleteMapping("/{postId}")
+//    public ResponseEntity<?> deletePost(@PathVariable Long postId) {
+//
+//    }
 
     // 디바이스 타입에 따른 페이징 limit
     private int getPageLimit(String deviceType) {
