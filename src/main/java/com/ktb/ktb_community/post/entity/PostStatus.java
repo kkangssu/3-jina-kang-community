@@ -22,8 +22,8 @@ public class PostStatus {
     private Post post;
 
     @Column(name = "view_count", nullable = false)
-    private long viewCount = 0;
+    private Long viewCount = 0L;
 
     @Column(name = "like_count", nullable = false)
-    private long likeCount = 0;
+    private Long likeCount = 0L;
 }
