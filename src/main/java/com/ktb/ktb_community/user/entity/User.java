@@ -35,7 +35,7 @@ public class User {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "profile_image_id", nullable = false)
-    private ProfileImage profileImageId;
+    private ProfileImage profileImage;
 
     @CreatedDate
     @Column(name = "created_at", nullable = false, updatable = false)
