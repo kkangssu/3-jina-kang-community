@@ -20,7 +20,7 @@ public interface PostRepository extends JpaRepository<Post, Long> {
             u.nickname,
             ps.likeCount,
             COUNT(DISTINCT c.id),
-            ps.likeCount,
+            ps.viewCount,
             p.createdAt
         )
         FROM Post p
