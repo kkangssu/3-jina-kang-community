@@ -35,6 +35,7 @@ public class AuthService {
     private final UserMapper userMapper;
     private final RefreshTokenService  refreshTokenService;
 
+    // 로그인
     public LoginResult login(LoginRequest loginRequest) {
         log.info("login - userEmail: {}", loginRequest.email());
 
@@ -58,5 +59,14 @@ public class AuthService {
         UserInfo userInfo = userMapper.toUserInfo(user);
 
         return new LoginResult(userInfo, accessToken, refreshToken);
+    }
+
+    // 로그아웃
+    public void logout() {
+        log.info("logout");
+
+        // accessToken 확인 - 존재, 만료, 서명 유효
+
+        // refreshToken 삭제
     }
 }
