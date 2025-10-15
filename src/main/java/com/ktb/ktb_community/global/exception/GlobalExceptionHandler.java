@@ -15,6 +15,7 @@ import java.util.Map;
 @Slf4j
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+    // 기본 에러
     @ExceptionHandler(CustomException.class)
     public ResponseEntity<ErrorResponse> handlerCustomException(CustomException e) {
         log.error("에러 - code: {}, message: {}", e.getErrorCode(), e.getMessage());
@@ -26,6 +27,7 @@ public class GlobalExceptionHandler {
                 .body(response);
     }
 
+    // Valid 에러
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ErrorResponse> handleValidationException(
             MethodArgumentNotValidException e) {
@@ -38,15 +40,14 @@ public class GlobalExceptionHandler {
             errors.put(fieldName, errorMessage);
         });
 
-        String message = "Validation 실패: " + errors.toString();
-
-        ErrorResponse response = ErrorResponse.of(ErrorCode.VALIDATION_ERROR, message);
+        ErrorResponse response = ErrorResponse.of(ErrorCode.VALIDATION_ERROR, errors);
 
         return ResponseEntity
                 .status(HttpStatus.BAD_REQUEST)
                 .body(response);
     }
 
+    // Internal Server 에러
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleException(Exception e) {
         log.error("서버 에러: ", e);
