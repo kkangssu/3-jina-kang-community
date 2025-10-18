@@ -1,7 +1,6 @@
 package com.ktb.ktb_community.auth.service;
 
 import com.ktb.ktb_community.auth.dto.request.LoginRequest;
-import com.ktb.ktb_community.auth.dto.response.LoginResponse;
 import com.ktb.ktb_community.auth.dto.response.LoginResult;
 import com.ktb.ktb_community.global.exception.CustomException;
 import com.ktb.ktb_community.global.exception.ErrorCode;
@@ -62,11 +61,10 @@ public class AuthService {
     }
 
     // 로그아웃
-    public void logout() {
+    public void logout(Long userId) {
         log.info("logout");
 
-        // accessToken 확인 - 존재, 만료, 서명 유효
-
         // refreshToken 삭제
+        refreshTokenService.deleteRefreshToken(userId);
     }
 }
