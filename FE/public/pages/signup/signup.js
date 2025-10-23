@@ -1,59 +1,69 @@
-import { login } from '../../utils/api.js';
+import { signup } from '../../utils/api.js';
 import { ROUTES } from '../../utils/routes.js';
 
 document.addEventListener('DOMContentLoaded', function() {
     M.updateTextFields();
 
-    const loginForm = document.getElementById('login-form');
-   
-    loginForm.addEventListener('submit', handleLogin);
+    const signupForm = document.getElementById('signup-form');
+    signupForm.addEventListener('submit', handleSignup);
 });
 
-async function handleLogin(e) {
+async function handleSignup(e) {
     e.preventDefault();
 
-    // 입렵값 받아오기
+    // 입력값 받아오기
+    const profileImageId = 1;
     const email = document.getElementById('email').value.trim();
     const password = document.getElementById('password').value;
+    const nickname = document.getElementById('nickname').value.trim();
 
     // 입력값 검증
-    if (!email ) {
+    if(!profileImageId) {
+        M.toast({ html: '프로필 사진을 업로드해주세요.' });
+        return;
+    }
+
+    if(!email) {
         M.toast({ html: '이메일을 입력해주세요.' });
         return;
     }
+
     if(!isValidEmail(email)) {
         M.toast({ html: '올바른 이메일을 입력해주세요.' });
         return;
     }
-    if( !password ) {
+    
+    if(!password) {
         M.toast({ html: '비밀번호를 입력해주세요.' });
         return;
     }
 
+    if(!nickname) {
+        M.toast({ html: '닉네임을 입력해주세요.' });
+        return;
+    }
+    
     const submitBtn = e.target.querySelector('button[type="submit"]');
     const originalText = submitBtn.textContent;
     submitBtn.disabled = true;
-    submitBtn.textContent = '로그인 중...';
+    submitBtn.textContent = '회원가입 중...';
 
     // API 호출
     try {
-        const data = await login(email, password);
-        // accessToken 저장
-        localStorage.setItem('accessToken', data.accessToken);
-        // 회원 정보 저장
-        localStorage.setItem('user', JSON.stringify(data.userInfo));
-        // 게시글 목록으로 이동
+        const data = await signup(email, password, nickname, profileImageId);
+
+        // 로그인 페이지로 이동
         setTimeout(() => {
-            window.location.href = ROUTES.POSTS;
+            window.location.replace(ROUTES.LOGIN);
         }, 500);
     } catch (error) {
-        console.error('로그인 에러: ',error);
+        console.error('회원가입 에러: ',error);
 
-        M.toast({ html: '로그인 실패: ' + error.message });
+        M.toast({ html: '회원가입 실패: ' + error.message });
 
         submitBtn.disabled = false;
         submitBtn.textContent = originalText;
-    } 
+    }
 }
 
 function isValidEmail(email) {

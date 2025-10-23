@@ -1,10 +1,11 @@
-import { getPostDetail, getCommentList, createComment, deletePost } from '../../utils/api.js';
+import { getPostDetail, getCommentList, createComment, deletePost, deleteComment, updateComment } from '../../utils/api.js';
 import { formatDateTime } from '../../utils/common.js';
 
 let postId = null;
 let currentCursor = null;
 let isLoading = false;
 let hasNext = true;
+let comments = [];
 
 // DOM 요소
 // 게시글
@@ -31,6 +32,14 @@ async function fetchPostDetail() {
     } catch (error) {
         M.toast({ html: '게시글 상세 조회 실패: ' + error.message });
         console.error('게시글 상세 조회 에러: ',error);
+    }
+}
+
+// 댓글 개수 업데이트
+function updateCommentCount(count) {
+    const  commentCount = document.querySelector('#comment-count-display');
+    if(commentCount) {
+        commentCount.textContent = count;
     }
 }
 
@@ -61,55 +70,41 @@ function renderPostDetail(post) {
                 <div class="post-status grey-text" style="margin: 20px 0;">
                     <span><i class="material-icons left">thumb_up</i>${post.likeCount}</span>
                     <span><i class="material-icons left">visibility</i>${post.viewCount}</span>
+                    <span>
+                        <i class="material-icons left">comment</i>
+                        <span id="comment-count-display">...</span>
+                    </span>
                 </div>
             </div>
         </div>
     `;
-
-    if(post.isAuthor) {
-        setupPostActions();
-    }
-}
-
-// 게시글 수정/삭제 이벤트
-function setupPostActions() {
-    const editBtn = postDetailContainer.querySelector('[data-action="edit"]');
-    const deleteBtn = postDetailContainer.querySelector('[data-action="delete"]');
-
-    if(editBtn) {
-        editBtn.addEventListener('click', handleEditPost);
-    }
-    if(deleteBtn) {
-        deleteBtn.addEventListener('click', handleDeletePost);
-    }
 }
 
 // 댓글 카드
 function createCommentCard(comment) {
     const card = document.createElement('div');
     card.className = 'card comment-item';
+    card.dataset.commentId = comment.commentId;
 
     const commentActions = comment.isAuthor ? `
         <div class="comment-actions">
             <button class="btn waves-effect waves-light purple lighten-4" data-action="edit">
-            <i class="material-icons left">edit</i>수정
+                <i class="material-icons left">edit</i>수정
             </button>
             <button class="btn waves-effect waves-light purple lighten-4" data-action="delete">
-            <i class="material-icons left">delete</i>삭제
+                <i class="material-icons left">delete</i>삭제
             </button>
         </div>
     ` : '';
 
     card.innerHTML = `
-        <div class="card comment-item">
-            <div class="comment-content">
-                <div class="comment-author">${comment.authorName}</div>
-                <div class="comment-created-at">${formatDateTime(comment.createdAt)}</div>
-                <div class="comment-content" style="margin-top: 10px;">
-                    ${comment.content}
-                </div>
-                ${commentActions}
+        <div class="comment-content">
+            <div class="comment-author">${comment.authorName}</div>
+            <div class="comment-created-at">${formatDateTime(comment.createdAt)}</div>
+            <div class="comment-content" style="margin-top: 10px;">
+                ${comment.content}
             </div>
+            ${commentActions}
         </div>
     `;
     return card;
@@ -119,18 +114,30 @@ function createCommentCard(comment) {
 async function fetchCommentList(cursor = null) {
     if(isLoading) return;
     isLoading = true;
-    try {
-        const response = await getCommentList(postId, currentCursor);
 
-        if(currentCursor === null && response.data.length === 0) {
+    try {
+        const commentList = await getCommentList(postId, cursor);
+    
+        if(cursor === null && commentList.data.length === 0) {
             commentListContainer.innerHTML = '<div class="no-comment">댓글이 없습니다.</div>';
+            updateCommentCount(0);
             return;
         }
-        
-        renderCommentList(response.data);
 
-        currentCursor = response.nextCursor;
-        hasNext = response.hasNext;
+        // 첫 댓글 목록 조회 시 초기화
+        if(cursor === null) {
+            commentListContainer.innerHTML = '';
+            comments = [];
+        }
+
+        comments = comments.concat(commentList.data);
+        
+        renderCommentList(commentList.data);
+
+        updateCommentCount(commentList.count);
+
+        currentCursor = commentList.nextCursor;
+        hasNext = commentList.hasNext;
 
         updateLoadCommentButton();
     } catch (error) {
@@ -147,8 +154,15 @@ function renderCommentList(comments) {
         const commentCard = createCommentCard(comment);
         commentListContainer.appendChild(commentCard);
     });
+}
 
-    setupCommentActions();
+// 댓글 목록 삭제 후 렌더링
+function renderCommentListAfterDelete(comments) {
+    commentListContainer.innerHTML = '';
+    comments.forEach(comment => {
+        const commentCard = createCommentCard(comment);
+        commentListContainer.appendChild(commentCard);
+    });
 }
 
 // 댓글 더보기 버튼
@@ -162,10 +176,41 @@ function updateLoadCommentButton() {
 
 // 이벤트 리스너 설정
 function setupEventListeners() {
-    submitCommentBtn.addEventListener('click', handleSubmitComment);
-    loadCommentBtn.addEventListener('click', handleFetchCommentList);
     // 댓글 입력 이벤트
+    submitCommentBtn.addEventListener('click', handleSubmitComment);
     commentContent.addEventListener('input', handleCommentInput);
+    // 댓글 더보기 이벤트
+    loadCommentBtn.addEventListener('click', handleFetchCommentList);
+    // 게시글 수정/삭제 이벤트
+    postDetailContainer.addEventListener('click', handlePostAction);
+    // 댓글 수정/삭제 이벤트
+    commentListContainer.addEventListener('click', handleCommentAction);
+}
+
+// 게시글 수정/삭제 이벤트
+function handlePostAction(e) {
+    const editBtn = e.target.closest('[data-action="edit"]');
+    const deleteBtn = e.target.closest('[data-action="delete"]');
+
+    if(editBtn) {
+        handleEditPost();
+    }
+    else if(deleteBtn) {
+        handleDeletePost();
+    }
+}
+
+// 댓글 수정/삭제 이벤트
+function handleCommentAction(e) {
+    const editBtn = e.target.closest('[data-action="edit"]');
+    const deleteBtn = e.target.closest('[data-action="delete"]');
+
+    if(editBtn) {
+        handleEditComment(e);
+    }
+    else if(deleteBtn) {
+        handleDeleteComment(e);
+    }
 }
 
 // 댓글 입력 이벤트 -> 댓글 입력 안하거나 500자 넘어가면 등록버튼 비활성화
@@ -200,15 +245,21 @@ async function handleSubmitComment(e) {
     submitCommentBtn.textContent = '등록 중...';
 
     try {
-        await createComment(postId, content);
+        const newComment = await createComment(postId, content);
+
+        comments.unshift(newComment);
+
+        const commentElement = createCommentCard(newComment);
+        commentListContainer.prepend(commentElement);
+
+        const currentCounter = parseInt(document.querySelector('#comment-count-display').textContent) || 0;
+        updateCommentCount(currentCounter + 1);
 
         // 댓글 입력 필드 초기화
         commentContent.value = '';
         commentLength.textContent = 0;
 
-        // 댓글 목록 조회
-        currentCursor = null;
-        await fetchCommentList();
+        M.toast({ html: '댓글이 등록되었습니다.' });
     } catch (error) {
         M.toast({ html: '댓글 등록 실패: ' + error.message });
         console.error('댓글 등록 에러: ',error);
@@ -261,10 +312,41 @@ async function handleDeletePost() {
     }
 }
 
-/*
-댓글 수정 이벤트
-댓글 삭제 이벤트
-*/
+// 댓글 수정 핸들러
+function handleEditComment(e) {
+    const commentCard = e.target.closest('.comment-item');
+    const commentId = commentCard.dataset.commentId;
+    const commentContent = commentCard.querySelector('.comment-content').value;
+}
+
+// 댓글 삭제 핸들러
+async function handleDeleteComment(e) {
+    const commentCard = e.target.closest('.comment-item');
+    const commentId = commentCard.dataset.commentId;
+    
+    if(!confirm('정말 삭제하시겠습니까?')) {
+        return;
+    }
+    
+    try {
+        await deleteComment(postId, commentId);
+
+        const deletedCommentId = Number(commentId);
+
+        comments = comments.filter(comment => comment.commentId !== deletedCommentId);
+        const afterLength = comments.length;
+        
+        const currentCounter = parseInt(document.querySelector('#comment-count-display').textContent) || 0;
+        updateCommentCount(currentCounter - 1);
+        
+        renderCommentListAfterDelete(comments);
+
+        M.toast({ html: '댓글 삭제 성공' });
+    } catch (error) {
+        M.toast({ html: '댓글 삭제 실패: ' + error.message });
+        console.error('댓글 삭제 에러: ',error);
+    }
+}
 
 // 초기화
 async function init() {
