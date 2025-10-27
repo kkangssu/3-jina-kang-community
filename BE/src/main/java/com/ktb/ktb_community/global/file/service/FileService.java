@@ -1,13 +1,14 @@
 package com.ktb.ktb_community.global.file.service;
 
-import com.ktb.ktb_community.post.repository.PostRepository;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
+import com.ktb.ktb_community.global.file.dto.response.UploadFileResponse;
 
-@Slf4j
-@Service
-@RequiredArgsConstructor
-public class FileService {
+import org.springframework.core.io.Resource;
+import org.springframework.web.multipart.MultipartFile;
 
+public interface FileService {
+
+    UploadFileResponse upLoadFile(MultipartFile file);
+    Resource getFile(String fileUrl);
+    String getContentType(String fileName);
+    Resource getFileWithToken(String fileName, String token);
 }
